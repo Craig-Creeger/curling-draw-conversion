@@ -1,0 +1,173 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Draw Conversion</title>
+<style type="text/css">
+form {
+	display:inline-block;
+	margin-bottom:1em;
+	padding:1em;
+	background-color:gainsboro;
+}
+table {
+	border-collapse:collapse;
+}
+td {
+	border:thin solid gray;
+	padding:.3em .8em;
+}
+ol ol {
+	margin-bottom:1em;
+}
+</style>
+</head>
+
+<body>
+<h1>Draw Conversion</h1>
+<p>This utility will convert Satrom’s spreadsheet format into the CSV format needed for Curling Club Manager.</p>
+<p>Steps:</p>
+<ol>
+	<li>
+		<p>Make some manual tweaks to Satrom’s spreadsheet.</p>
+		<ol style="list-style-type:upper-alpha;">
+			<li>When opening the spreadsheet, make sure the enable the macros.</li>
+			<li>Select the “Automated Sheet” tab.</li>
+			<li>Copy all the cells and &quot;Paste Special&quot; (values and formats) into a new spreadsheet.</li>
+			<li>Format it so that it looks like this:
+				<p><img src="img/example.png" width="616" height="210"></p>
+				<ul>
+					<li>Columns C and D should be deleted.</li>
+					<li>The dates should be converted to a string.</li>
+					<li>The first row should be deleted.</li>
+					<li>Delete unnecessary data or columns.</li>
+					<li>Give columns A and B the titles  &quot;nbr&quot; and &quot;name&quot;</li>
+				</ul>
+			</li>
+		</ol></li>
+	<li>Save it as a CSV (comma separated file).</li>
+	<li><p>Upload the file you just created.</p>
+		<form name="frmConvert" enctype="multipart/form-data" method="post" action="" onSubmit="parsefile(); return false;">
+			<p><label for="upload">Satrom File</label> <input type="file" name="upload" id="upload"></p>
+			<p><label for="startTime">Start Time (24 hour format)</label><input name="startTime" type="text" id="startTime" value="16:30" size="6"></p>
+			<p><input type="submit" value="Convert" name="btnSubmit"></p>
+		</form>
+	</li>
+	<li>
+		<p>You should then have a CSV file ready to be uploaded to the Curling Club website.</p>
+		<p><a id="drawDownload" href="#" download="drawImport.csv">Download</a></p>
+		<p>The columns exported are:</p>
+		<table>
+			<thead>
+			<tr>
+				<td>Start Date</td>
+				<td>Start Time</td>
+				<td>Team 1 Name</td>
+				<td>Team 2 Name</td>
+				<td>Team 1 Score</td>
+				<td>Team 2 Score</td>
+				<td>Sheet</td>
+				<td>Division</td>
+				<td>Round</td>
+			</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</li>
+</ol>
+<p style="margin-top:4em;">&nbsp;</p>
+<script src="js/jQuery.js"></script> 
+<script src="js/papaparse.min.js"></script> 
+<script>
+function parsefile() {
+	var file = document.getElementById('upload').files[0];
+	
+	function validGame(prop, value) {
+		//returns an object{team2nbr, ice} or FALSE
+		if (!isNaN(Date.parse(prop))) {
+			var pos = value.indexOf('vs');
+			if (pos != -1) {
+				var matches = value.match(/\d+/g);
+				return {ice: matches[0], team2nbr: matches[1]};
+			}
+		}
+		return false;
+	}
+	
+	Papa.parse(file, {"header": true,
+		"complete": function(results) {
+			var games = new Array();
+			var teams = new Array();
+			var data = results.data;
+			var curName, 
+			    curNbr;
+			var exportCSV = new Array();
+				
+			//Create all the game records using the data that we have so far.
+			for (var i = 0; i < data.length; i++) {
+				for (var prop in results.data[i]) {
+					if (data[i].hasOwnProperty(prop)) {
+						if (prop == 'name') {
+							curName = data[i][prop];
+						} else if (prop == 'nbr') {
+							curNbr = data[i][prop];
+						} else if (curGame = validGame(prop, data[i][prop])) {
+							games.push({
+								row: i,
+								startDate: prop,
+								team1name: '',
+								team2name: '',
+								team1nbr: '',
+								team2nbr: curGame.team2nbr,
+								ice: curGame.ice
+							});
+						}
+					}
+				}
+				teams[curNbr] = {"name": curName, "row": i};
+			}
+			
+			document.getElementsByTagName('tbody')[0].innerHTML = "";
+			//Loop through all the game records and fill-in the missing information.
+			games.forEach(function(element, index, array) {
+				for (var j = 1; j < teams.length; j++) {
+					if (teams[j].row == element.row) {
+						element.team1name = teams[j].name;
+						element.team1nbr = j;
+						break;
+					}
+				}
+				element.team2name = teams[element.team2nbr].name;
+				
+				//Create export cells
+				exportCSV.push([element.startDate, document.frmConvert.startTime.value, element.team1name, element.team2name, "", "", element.ice, "", ""]);
+				$('tbody').append("<tr><td>" + element.startDate + "</td><td>" + document.frmConvert.startTime.value + "</td><td>" + element.team1name + "</td><td>" + element.team2name + "</td><td></td><td></td><td>" + element.ice + "</td><td></td><td></td></tr>");
+			});
+			var csv = Papa.unparse({
+				fields: ["Start Date", "Start Time", "Team 1 Name", "Team 2 Name", "Team 1 Score", "Team 2 Score", "Sheet", "Division", "Round"],
+				data: exportCSV
+			});
+
+			var textFile;
+			function makeTextFile (csv) {
+				var data = new Blob([csv], {type: 'text/plain'});
+			
+				// If we are replacing a previously generated file we need to
+				// manually revoke the object URL to avoid memory leaks.
+				if (textFile !== null) {
+				  window.URL.revokeObjectURL(textFile);
+				}
+			
+				textFile = window.URL.createObjectURL(data);
+			
+				// returns a URL you can use as a href
+				return textFile;
+  			};
+			document.getElementById('drawDownload').href = makeTextFile(csv);
+		}
+	});
+}
+</script>
+</body>
+</html>
