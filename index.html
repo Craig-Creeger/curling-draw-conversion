@@ -24,7 +24,7 @@ ol ol {
 </head>
 
 <body>
-<h1>Draw Conversion</h1>
+<h1>Draw Conversion (Version 1.1)</h1>
 <p>This utility will convert Satrom’s spreadsheet format into the CSV format needed for Curling Club Manager.</p>
 <p>Steps:</p>
 <ol>
@@ -33,15 +33,15 @@ ol ol {
 		<ol style="list-style-type:upper-alpha;">
 			<li>When opening the spreadsheet, make sure the enable the macros.</li>
 			<li>Select the “Automated Sheet” tab.</li>
-			<li>Copy all the cells and &quot;Paste Special&quot; (values and formats) into a new spreadsheet.</li>
+			<li>Copy all the cells on that worksheet.</li>
+			<li>Create a new blank spreadshet.</li>
+			<li>Paste the cells using &quot;Paste Special...&quot;, then choose &quot;Values and formats&quot;, into the new spreadsheet.</li>
 			<li>Format it so that it looks like this:
-				<p><img src="img/example.png" width="616" height="210"></p>
+				<p><img src="img/example.png" width="746" height="224"></p>
 				<ul>
-					<li>Columns C and D should be deleted.</li>
-					<li>The dates should be converted to a string.</li>
-					<li>The first row should be deleted.</li>
-					<li>Delete unnecessary data or columns.</li>
+					<li>Delete all rows and columns that do NOT contain actual data (probably columns C and D and the first row).</li>
 					<li>Give columns A and B the titles  &quot;nbr&quot; and &quot;name&quot;</li>
+					<li>Make sure the team &quot;name&quot; column matches the team names listed on the Import Template. Edit as necessary.</li>
 				</ul>
 			</li>
 		</ol></li>
@@ -120,7 +120,8 @@ function parsefile() {
 								team2name: '',
 								team1nbr: '',
 								team2nbr: curGame.team2nbr,
-								ice: curGame.ice
+								ice: curGame.ice,
+								isDuplicate: false
 							});
 						}
 					}
@@ -139,10 +140,19 @@ function parsefile() {
 					}
 				}
 				element.team2name = teams[element.team2nbr].name;
-				
-				//Create export cells
-				exportCSV.push([element.startDate, document.frmConvert.startTime.value, element.team1name, element.team2name, "", "", element.ice, "", ""]);
-				$('tbody').append("<tr><td>" + element.startDate + "</td><td>" + document.frmConvert.startTime.value + "</td><td>" + element.team1name + "</td><td>" + element.team2name + "</td><td></td><td></td><td>" + element.ice + "</td><td></td><td></td></tr>");
+			});
+			
+			//Loop through all the game records and remove the duplicates (Donn's spreasheet shows each game twice).
+			games.forEach(function(element, index, array) {
+				for (var i = index + 1; i < array.length; i++) {
+					if (element.team1nbr == array[i].team2nbr && element.team2nbr == array[i].team1nbr) {
+						array[i].isDuplicate = true;
+					}
+				}
+				if (!array[index].isDuplicate) {
+					exportCSV.push([element.startDate, document.frmConvert.startTime.value, element.team1name, element.team2name, "", "", element.ice, "", ""]);
+					$('tbody').append("<tr><td>" + element.startDate + "</td><td>" + document.frmConvert.startTime.value + "</td><td>" + element.team1name + "</td><td>" + element.team2name + "</td><td></td><td></td><td>" + element.ice + "</td><td></td><td></td></tr>");
+				}
 			});
 			var csv = Papa.unparse({
 				fields: ["Start Date", "Start Time", "Team 1 Name", "Team 2 Name", "Team 1 Score", "Team 2 Score", "Sheet", "Division", "Round"],
