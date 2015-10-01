@@ -91,6 +91,10 @@ function parsefile() {
 				var matches = value.match(/\d+/g);
 				return {ice: matches[0], team2nbr: matches[1]};
 			}
+            var pos = value.indexOf('BYE');
+            if (pos != -1) {
+                return {ice: 9, team2nbr: 99};
+            }
 		}
 		return false;
 	}
@@ -139,7 +143,11 @@ function parsefile() {
 						break;
 					}
 				}
-				element.team2name = teams[element.team2nbr].name;
+                if (element.team2nbr == 99) {
+                    element.team2name = "BYE WEEK";
+                } else {
+                    element.team2name = teams[element.team2nbr].name;
+                }
 			});
 			
 			//Loop through all the game records and remove the duplicates (Donn's spreasheet shows each game twice).
