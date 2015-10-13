@@ -48,8 +48,9 @@ ol ol {
 	<li>Save it as a CSV (comma separated file).</li>
 	<li><p>Upload the file you just created.</p>
 		<form name="frmConvert" enctype="multipart/form-data" method="post" action="" onSubmit="parsefile(); return false;">
-			<p><label for="upload">Satrom File</label> <input type="file" name="upload" id="upload"></p>
-			<p><label for="startTime">Start Time (24 hour format)</label><input name="startTime" type="text" id="startTime" value="16:30" size="6"></p>
+			<p><label for="upload">Satrom File</label><br></bjr><input type="file" name="upload" id="upload"></p>
+			<p><label for="startTime">Start Time (24 hour format)</label><br><input name="startTime" type="text" id="startTime" value="16:30" size="6"></p>
+			<p><label for="ice">Ice Sheet for BYE games</label><br><input type="text" id="ice" name="ice" value="0" size="2"></p>
 			<p><input type="submit" value="Convert" name="btnSubmit"></p>
 		</form>
 	</li>
@@ -93,7 +94,8 @@ function parsefile() {
 			}
             var pos = value.indexOf('BYE');
             if (pos != -1) {
-                return {ice: 9, team2nbr: 99};
+                var ice = $('#ice').val();
+                return {ice: ice, team2nbr: 99};
             }
 		}
 		return false;
