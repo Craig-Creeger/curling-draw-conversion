@@ -35,7 +35,7 @@
 		<li>
 			<p>Make some manual tweaks to Satrom’s spreadsheet.</p>
 			<ol style="list-style-type:upper-alpha;">
-				<li>When opening the spreadsheet, make sure the enable the macros.</li>
+				<li>When opening the spreadsheet, you should enable the macros.</li>
 				<li>Select the “Automated Sheet” tab.</li>
 				<li>Copy all the cells on that worksheet.</li>
 				<li>Create a new blank spreadshet.</li>
@@ -76,6 +76,8 @@
 						<td>Sheet</td>
 						<td>Division</td>
 						<td>Round</td>
+						<td>Team 1 Volunteer Role</td>
+						<td>Team 2 Volunteer Role</td>
 					</tr>
 				</thead>
 				<tbody>
@@ -176,12 +178,13 @@
 							}
 						}
 						if (!array[index].isDuplicate) {
-							exportCSV.push([element.startDate, document.frmConvert.startTime.value, element.team1name, element.team2name, "", "", element.ice, "", ""]);
-							$('tbody').append("<tr><td>" + element.startDate + "</td><td>" + document.frmConvert.startTime.value + "</td><td>" + element.team1name + "</td><td>" + element.team2name + "</td><td></td><td></td><td>" + element.ice + "</td><td></td><td></td></tr>");
+							exportCSV.push([element.startDate, document.frmConvert.startTime.value, element.team1name, element.team2name, "", "", element.ice, "A", "1", "", ""]);
+
+							$('tbody').append("<tr><td>" + element.startDate + "</td><td>" + document.frmConvert.startTime.value + "</td><td>" + element.team1name + "</td><td>" + element.team2name + "</td><td></td><td></td><td>" + element.ice + "</td><td>A</td><td>1</td><td></td><td></td></tr>");
 						}
 					});
 					var csv = Papa.unparse({
-						fields: ["Start Date", "Start Time", "Team 1 Name", "Team 2 Name", "Team 1 Score", "Team 2 Score", "Sheet", "Division", "Round"],
+						fields: ["Start Date", "Start Time", "Team 1 Name", "Team 2 Name", "Team 1 Score", "Team 2 Score", "Sheet", "Division", "Round", "Team 1 Volunteer Role", "Team 2 Volunteer Role"],
 						data: exportCSV
 					});
 
